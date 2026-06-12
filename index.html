@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Фармасправочник — Клинический гайд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header id="top">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">Rx</span>
+      <div>
+        <div class="logo-title">Фармасправочник</div>
+        <div class="logo-sub">Клинический гайд · 16 файлов · 200+ препаратов</div>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search-input" placeholder="Найти препарат, группу, показание…" autocomplete="off" aria-label="Поиск по справочнику">
+        <button class="search-clear" id="search-clear" aria-label="Очистить поиск">✕</button>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+    <span class="kbd-hint" style="flex-shrink:0;display:none" id="kbd-hint">Ctrl+K</span>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="fav-btn" title="Избранное" aria-label="Избранное">
+        <span>★</span><span class="badge-count" id="fav-count" style="display:none"></span>
+      </button>
+      <button class="icon-btn" id="compare-btn" title="Сравнить препараты" aria-label="Сравнение">
+        <span>⇄</span><span class="badge-count" id="compare-count" style="display:none"></span>
+      </button>
+      <button class="icon-btn" id="theme-btn" title="Переключить тему" aria-label="Тёмная/светлая тема">☀</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== SEARCH OVERLAY ===== -->
+<div id="search-overlay" class="search-overlay" style="display:none"></div>
+
+<!-- ===== MOBILE TABS ===== -->
+<nav class="mobile-tabs" aria-label="Навигация">
+  <button class="mtab active" data-tab="drugs">Препараты</button>
+  <button class="mtab" data-tab="mechanisms">Механизмы</button>
+  <button class="mtab" data-tab="sections">Разделы</button>
+  <button class="mtab" data-tab="alphabet">А–Я</button>
+  <button class="mtab" data-tab="favorites">Избранное</button>
+  <button class="mtab" data-tab="study">Учёба</button>
+  <button class="mtab" data-tab="table">Таблица</button>
+</nav>
+
+<!-- ===== MAIN LAYOUT ===== -->
+<main class="main-layout">
+
+  <!-- SIDEBAR FILTERS (desktop) -->
+  <aside class="sidebar">
+    <div class="filter-header">
+      <span>Фильтры</span>
+      <button class="reset-filters" id="reset-filters">Сбросить</button>
+    </div>
+    <div class="active-chips" id="active-chips"></div>
+    <div class="filter-group">
+      <div class="filter-label">Группа препаратов</div>
+      <div id="group-filters" class="filter-list"></div>
+    </div>
+    <div class="result-count" id="result-count"></div>
+  </aside>
+
+  <!-- COLUMNS AREA -->
+  <div class="columns-area">
+
+    <!-- RECENTLY VIEWED -->
+    <div class="recent-bar" id="recent-bar" style="display:none">
+      <span class="recent-label">Недавние:</span>
+      <div class="recent-list" id="recent-list"></div>
+      <button class="recent-clear" id="recent-clear">✕</button>
+    </div>
+
+    <!-- THREE COLUMNS -->
+    <div class="three-cols" id="three-cols">
+
+      <!-- COL 1: ПРЕПАРАТЫ -->
+      <div class="col col-drugs" id="tab-drugs">
+        <div class="col-header">
+          <h2 class="col-title">Препараты</h2>
+          <span class="col-count" id="drugs-count"></span>
+        </div>
+        <div class="drug-groups" id="drug-groups-list"></div>
+      </div>
+
+      <!-- COL 2: МЕХАНИЗМЫ -->
+      <div class="col col-mechanisms" id="tab-mechanisms">
+        <div class="col-header">
+          <h2 class="col-title">Механизм действия</h2>
+          <span class="col-subtitle">по группам</span>
+        </div>
+        <div class="mechanisms-list" id="mechanisms-list"></div>
+      </div>
+
+      <!-- COL 3: РАЗДЕЛЫ -->
+      <div class="col col-sections" id="tab-sections">
+        <div class="col-header">
+          <h2 class="col-title">Дополнительные разделы</h2>
+          <span class="col-subtitle">по теме</span>
+        </div>
+        <div class="sections-list" id="sections-list"></div>
+      </div>
+
+    </div><!-- end three-cols -->
+
+    <!-- ALPHABET TAB -->
+    <div class="col" id="tab-alphabet" style="display:none">
+      <div class="col-header"><h2 class="col-title">Алфавитный указатель</h2></div>
+      <div class="alphabet-bar" id="alphabet-bar"></div>
+      <div class="alphabet-list" id="alphabet-list"></div>
+    </div>
+
+    <!-- FAVORITES TAB -->
+    <div class="col" id="tab-favorites" style="display:none">
+      <div class="col-header"><h2 class="col-title">★ Избранное</h2></div>
+      <div id="favorites-content"></div>
+    </div>
+
+    <!-- STUDY TAB -->
+    <div class="col study-col" id="tab-study" style="display:none">
+      <div class="col-header" style="justify-content:space-between">
+        <h2 class="col-title">🎓 Режим обучения</h2>
+        <div class="study-mode-btns">
+          <button class="study-mode-btn active" data-mode="flashcard">Карточки</button>
+          <button class="study-mode-btn" data-mode="quiz">Тест</button>
+        </div>
+      </div>
+      <div id="study-content"></div>
+    </div>
+
+    <!-- TABLE TAB -->
+    <div class="col table-col" id="tab-table" style="display:none">
+      <div class="col-header" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <h2 class="col-title">📋 Обзорная таблица</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="table-filter" placeholder="Фильтр по группе…"
+            style="padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;width:160px">
+          <select id="table-sort" style="padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none">
+            <option value="group">По группе</option>
+            <option value="name">По алфавиту</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><div id="table-content" style="padding:8px"></div></div>
+    </div>
+
+  </div><!-- end columns-area -->
+
+</main>
+
+<!-- ===== DRUG CARD PANEL ===== -->
+<div class="card-overlay" id="card-overlay" style="display:none" aria-modal="true" role="dialog">
+  <div class="card-panel" id="card-panel">
+    <div class="card-topbar">
+      <button class="back-btn" id="card-back">← Назад</button>
+      <div class="card-actions">
+        <button class="card-action-btn" id="card-fav">★ Избранное</button>
+        <button class="card-action-btn" id="card-compare">⇄ Сравнить</button>
+        <button class="card-action-btn" id="card-copy">⎘ Ссылка</button>
+      </div>
+    </div>
+    <div class="card-content" id="card-content"></div>
+  </div>
+</div>
+
+<!-- ===== COMPARE PANEL ===== -->
+<div class="compare-overlay" id="compare-overlay" style="display:none" aria-modal="true" role="dialog">
+  <div class="compare-panel">
+    <div class="compare-header">
+      <h2>Сравнение препаратов</h2>
+      <div class="compare-header-actions">
+        <button class="reset-filters" id="clear-compare">Очистить</button>
+        <button class="icon-btn" id="close-compare">✕</button>
+      </div>
+    </div>
+    <div class="compare-add">
+      <input type="text" id="compare-search" placeholder="Добавить препарат для сравнения…" autocomplete="off">
+      <div class="compare-search-results" id="compare-search-results"></div>
+    </div>
+    <div class="compare-content" id="compare-content"></div>
+  </div>
+</div>
+
+<!-- ===== SECTION PANEL ===== -->
+<div class="section-overlay" id="section-overlay" style="display:none" aria-modal="true" role="dialog">
+  <div class="section-panel">
+    <div class="compare-header">
+      <h2 id="section-panel-title"></h2>
+      <button class="icon-btn" id="close-section">✕</button>
+    </div>
+    <div class="section-panel-content" id="section-panel-content"></div>
+  </div>
+</div>
+
+<!-- ===== MOBILE FILTER PANEL ===== -->
+<div class="mobile-filter-overlay" id="mobile-filter-overlay" style="display:none">
+  <div class="mobile-filter-panel">
+    <div class="compare-header">
+      <h2>Фильтры</h2>
+      <button class="icon-btn" id="close-mobile-filter">✕</button>
+    </div>
+    <div id="mobile-filter-content"></div>
+    <button class="apply-btn" id="apply-mobile-filter">Применить</button>
+  </div>
+</div>
+
+<!-- ===== FLOATING BUTTONS ===== -->
+<button class="fab-filter" id="fab-filter" title="Фильтры">⊟</button>
+<button class="back-top" id="back-top" title="Наверх" aria-label="Наверх">↑</button>
+
+<script src="drugs.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
